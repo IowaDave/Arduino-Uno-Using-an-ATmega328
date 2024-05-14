@@ -10,9 +10,9 @@ I can think of three scenarios where this need could arise.
 
 1. The ATmega328P on one of your Arduinos stops working and you have only 328s on hand for replacements.
 
-2. You want to upload programs onto 328s mounted on an Arduino in the same way that you would for a ' a '328P.
+2. You want to upload programs onto 328s mounted on an Arduino in the same way that you would for a '328P.
 
-3. You're just curious. Or maybe you know somebody who bought a Big Box 'O '328s by mistake and wants to find a use for them. (Now, who would do a thing like *that*?, he wondered, as he turned his mirrors toward the wall.)
+3. You're just curious. Or maybe you know somebody who bought a Big Box 'O '328s by mistake and wants to find a use for them. (Now, who would do a thing like *that*? he wondered, as he turned his mirrors toward the wall.)
 
 #### Solution
 Configure the '328 in such a way that it will appear to be a '328P for the purpose of uploading code. Do this first, before mounting the '328 into the Arduino.
@@ -46,7 +46,7 @@ Attach the Arduino-as-ISP programmer to a USB port on the local computer. Make n
 
 Open a command line (terminal) window on the computer. Enter the avrdude commands that follow below, one at a time. 
 
-The commands will be mostly the same, differing only at the end. They share a common structure, the examples give here conforming to my Mac.  Change the avrdude path, the avrdude.conf path and the port location to those of your particular setup.
+The commands will be mostly the same, differing only at the end. They share a common structure, the examples given here conforming to my Mac.  Change the avrdude path, the avrdude.conf path and the port location to those of your particular setup.
 
 | Option Code | Option string | Purpose |
 | ----------- | ------------- | ------- |
@@ -64,7 +64,7 @@ It runs together as a single statement, leaving no space between option codes an
 /Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/bin/avrdude &#8209;C/Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/etc/avrdude.conf &#8209;v &#8209;pm328 &#8209;cstk500v1 &#8209;P/dev/cu.usbmodem14101 &#8209;b19200
 </blockquote>
 
-If you want to copy-and-paste, please do so from the "scripts" text file rather than from this browser display. The reasons is that I using an html entity for non-breaking hyphen in place of the regular hyphen character in these example strings. It was necessary to correct visual formatting in a browser. Your terminal program might not recognize those entity codes. The text file has the original hyphens.
+If you want to copy-and-paste, please do so from the "scripts" text file rather than from this browser display. The reason is that I am using an html entity for non-breaking hyphen in place of the regular hyphen character in these example strings. It was necessary to correct visual formatting in a browser. Your terminal program might not recognize those entity codes. The text file has the original hyphens.
 
 The result shows up in the command window looking something like this:
 
@@ -94,16 +94,18 @@ If you see something like that, then you are in business. The *boards.txt* file 
 
 Also, we are going to upload the bootloader that makes enables a chip mounted on the Arduino to accept code uploads.
 
-Update the "extended" fuse byte first. We just add one more option at the end, &#8209;U, meaning to Upload. efuse:w:0xfd:m
+Update the "extended" fuse byte first. We just add one more option at the end of the common command line given above, &#8209;U, meaning to Upload. 
 
-Write it with a value of 0xFD if you want the Brown-out detector to be running all the time in your ATmega328:
+The four-field string, efuse:w:0xfd:m, specifies the extended fuse memory space, the "w" write command, the value to write (0xfd for this fuse), and the "m" signifier telling avrdude to write the literal value.
+
+Writing it with a value of 0xfd will cause the Brown-out detector to be running all the time in your ATmega328:
 
 <blockquote>
 /Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/bin/avrdude &#8209;C/Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/etc/avrdude.conf &#8209;v &#8209;pm328 &#8209;cstk500v1 &#8209;P/dev/cu.usbmodem14101 &#8209;b19200 &#8209;U efuse:w:0xfd:m
 </blockquote>
 
 
-If you do *not* want the Brown-Out Detector to run on your ATmega328, then write the extended fuse to 0xFF instead. [Footnote #2](#footnote-2)
+If you do *not* want the Brown-Out Detector to run on your ATmega328, then write the extended fuse to 0xff instead. [Footnote #2](#footnote-2)
 
 Next, write the "high" fuse byte.
 
@@ -112,11 +114,13 @@ Next, write the "high" fuse byte.
 </blockquote>
 
  
-Now, I would skip over writing the low fuse byte for the moment. Instead, upload the bootloader into the flash memory.
+Now, at this point I would skip over writing the low fuse byte for the moment. Instead, upload the bootloader into the flash memory.
 
 <blockquote>
 /Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/bin/avrdude &#8209;C/Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/etc/avrdude.conf &#8209;v &#8209;pm328 &#8209;cstk500v1 &#8209;P/dev/cu.usbmodem14101 &#8209;b19200 &#8209;U flash:w:/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/bootloaders/optiboot/optiboot_atmega328.hex:i
 </blockquote>
+
+The -U option string for the bootloader gives the file location where the compiled firmware resides on my Mac. You will have to find the path to it on your machine and replace mine with yours. Note that the signifier in this command is "i", to indicate the firmware file is in the "Intel Hex" format.
 
 Finally, write the low fuse byte. This one changes the clock source for the chip to require a 16&nbsp;MHz external crystal. After you write this and perform a power-on reset of the chip, it will need to be connected to such a crystal in order to communicate with avrdude. As Figure 1 shows, I included a 16&nbsp;MHz crystal in my homebuilt programmer also.
 
@@ -145,6 +149,7 @@ And here it is!
  
  
 <h4 id="footnote-1">Footnote #1</h4>
+
 The "P" in 328P denotes a PicoPower version of the microcontroller. It consumes less current compared to the '328 without the "P".  The difference is not really noticeable on an Uno operating on 5 volts at a clock speed of 16 MHz.
 
 Detail-minded readers of the official datasheet for the devices can still find it mentioned that the '328, without the "P", lacks the ```jmp``` and ```call``` assembly language instructions. That is obsolete information.
