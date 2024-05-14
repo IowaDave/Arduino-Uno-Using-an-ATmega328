@@ -57,7 +57,6 @@ The commands will be mostly the same, differing only at the end. They share a co
 | &#8209;c | stk500v1 | Identify the type of programmer being used |
 | &#8209;P | /dev/cu.usbmodem14101 | Identify the USB port being used
 | &#8209;b | 19200 | BAUD rate |
-BAUD rate: -b19200
 
 It runs together as a single statement, leaving no space between option codes and the strings that go with them, thus:
 
