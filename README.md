@@ -136,6 +136,13 @@ avrdude: Device signature = 0x1e9514 (probably m328)
 We cannot change those bytes. Yet, an ATmega328P returns a different signature. Arduino uses avrdude to upload code into the chip mounted on the board. Which means that avrdude will expect to see the '328P signature. Normally, avrdude will abort an upload if it finds a device signature different from what it expects. So why does it not complain about the signature bytes when you upload code into a properly configured '328 installed into the socket on an Arduino Uno?
 
 Tom Almy, the electrical engineer and author of the excellent series of "Far Inside Arduino" books found the answer in the source code for the bootloader. Avrdude does not inspect the physical chip mounted on the Arduino board. Instead, it asks the bootloader, which always returns the signature bytes for a '328P. Again, see [Footnote #2](#footnote-2).
+
+And here it is! 
+
+![ATmega328 on an Uno](./images/ATmega328_in_Uno.png)
+<br>**An ATmega328, not-P, running the Blink demo program in an Arduino Uno clone board**
+
+ 
  
 <h4 id="footnote-1">Footnote #1</h4>
 The "P" in 328P denotes a PicoPower version of the microcontroller. It consumes less current compared to the '328 without the "P".  The difference is not really noticeable on an Uno operating on 5 volts at a clock speed of 16 MHz.
@@ -145,6 +152,7 @@ Detail-minded readers of the official datasheet for the devices can still find i
 Since revision of the silicon to the modern AVRe+ core, 328 chips do in fact support those instructions, according to the megaAVR device table in the [AVR Instruction Set Manual - 2021 edition](https://ww1.microchip.com/downloads/en/DeviceDoc/AVR-InstructionSet-Manual-DS40002198.pdf) as that link was accessed in May 2024.
 
 <h4 id="footnote-2">Footnote #2</h4>
+
 ATmega328P chips enable software to turn the Brown-Out Detector (BOD) on and off during runtime. The plain '328s do not. That is why the decision whether to operate the BOD in a '328 needs to be implemented in the extended fuse byte. 
 
 Readers take note: I have not investigated what might happen by telling a '328 to turn off its BOD. The need to manage the BOD dynamically has just never come up for me. If you need that capability, a '328 would be the wrong part; use a '328P instead.
