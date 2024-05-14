@@ -1,0 +1,96 @@
+Scripts to Flash an ATmega328 to operate on an Arduino Uno
+
+Note that the paths for the avrdude utility, the avrdude.conf file in the -C option, and the location of the USB port in the -P option, as shown below, were specific to my Mac at the time of writing in May 2024. You will need to replace them with the paths and location that are appropriate for your situation.
+
+Step 0 OPTIONAL read the chip just to get chip info
+/Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/bin/avrdude -C/Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/etc/avrdude.conf -v -pm328 -cstk500v1 -P/dev/cu.usbmodem14201 -b19200
+
+
+Step 1 flash the extended fuse byte to 0xFD, per boards.txt for 328P
+/Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/bin/avrdude -C/Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/etc/avrdude.conf -v -pm328 -cstk500v1 -P/dev/cu.usbmodem14201 -b19200 -U efuse:w:0xfd:m
+
+
+Step 2 flash the high fuse byte to 0xDE, per boards.txt for 328P
+/Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/bin/avrdude -C/Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/etc/avrdude.conf -v -pm328 -cstk500v1 -P/dev/cu.usbmodem14201 -b19200 -U hfuse:w:0xde:m
+
+
+Step 3 flash the optiboot bootloader, per boards.txt for 328P:
+/Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/bin/avrdude -C/Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/etc/avrdude.conf -v -pm328 -cstk500v1 -P/dev/cu.usbmodem14201 -b19200 -U flash:w:/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/bootloaders/optiboot/optiboot_atmega328.hex:i
+
+
+Step 4 flash the low fuse byte to 0xFF, per boards.txt:
+/Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/bin/avrdude -C/Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/etc/avrdude.conf -v -pm328 -cstk500v1 -P/dev/cu.usbmodem14201 -b19200 -U lfuse:w:0xff:m
+
+
+The low fuse byte should be written at the final step because it selects the 16 MHz external crystal oscillator to be the system clock. After this byte is written the chip requires such an oscillator.
+
+Upon completion, insert the chip into the socket on an Uno. If all goes well the Uno will operate as if it were an ATmega328P.
+
+Note that ATmega328, without the P, cannot perform a software BOD disable. So if BOD is to be disabled on a plain ol' 328 with no P, write the extended fuse byte to 0xFF. See "Alternative Extended Fuse Byte", below.
+
+
+
+####################
+####################
+
+OK, let's study those fuses for use with Uno and the Arduino IDE.
+
+Low Fuse pages 292-293  0xff for Arduino Uno = 0b11111111
+Caution write this one last because the chip will require a crystal afterward
+Bit
+7 CKDIV8		1	Unprogrammed
+6 CKOUT		1	Unprogrammed
+5 SUT1		1	Discussion page 39: SUT[1:0] = 11 for
+4 SUT0		1	slowly rising power with a crystal oscillator
+3 CKSEL3		1  	Discussion page 39: CKSEL3:1 = 111 
+2 CKSEL2		1  	for low-power oscillator
+1 CKSEL1		1	running at 8.0 to 16.0 MHz
+0 CKSEL0		1	CKSEL0 = 1 for crystal oscillator
+
+High Fuse page 292 0xde for Arduino Uno = 0b11011110
+Bit
+7 RSTDISBL	1	Unprogrammed, external reset will be enabled
+6 DWEN		1	Unprogrammed, no debug wire
+5 SPIEN		0	Programmed, enable SPI programming
+4 WDTON		1	Unprogrammed, watchdog timer not always on
+3 EESAVE		1	Unprogrammed, EEPROM not reserved
+2 BOOTSZ1	1	Discussion page 286, BOOTSZ[1:0] = 11
+1 BOOTSZ0	1	for 256-word = 512-byte boot sector
+0 BOOTRST	0	Programmed, start the boot loader after a reset
+
+Extended Fuse page 291 0xfd for Arduino Uno = 0b11111101
+Bit
+7 -		1	Unprogrammed by default
+6 -		1	Unprogrammed by default
+5 -		1	Unprogrammed by default
+4 -		1	Unprogrammed by default
+3 -		1	Unprogrammed by default
+2 BODLEVEL2	1	Discussion page 314
+1 BODLEVEL1	0	BODLEVEL[2:0] = 101
+0 BODLEVEL0	1	treats 2.5-2.9 volts as brown-out
+
+
+Alternate Extended Fuse Byte 0xff disables BOD on a plain ATmega328.
+Bit
+7 -		1	Unprogrammed by default
+6 -		1	Unprogrammed by default
+5 -		1	Unprogrammed by default
+4 -		1	Unprogrammed by default
+3 -		1	Unprogrammed by default
+2 BODLEVEL2	1	Discussion page 314
+1 BODLEVEL1	1	BODLEVEL[2:0] = 111
+0 BODLEVEL0	1	disables the Brown-Out Detector
+
+
+Alternate Low Fuse Byte for exposing clock output of 16 MHz crystal on PB0
+Low Fuse pages 292-293  0xbf for Arduino Uno = 0b10111111
+Caution when writing this one because the chip will require a crystal afterward
+Bit
+7 CKDIV8		1	Unprogrammed
+6 CKOUT		0	Programmed
+5 SUT1		1	Discussion page 39: SUT[1:0] = 11 for
+4 SUT0		1	slowly rising power with a crystal oscillator
+3 CKSEL3		1  	Discussion page 39: CKSEL3:1 = 111 
+2 CKSEL2		1  	for low-power oscillator
+1 CKSEL1		1	running at 8.0 to 16.0 MHz
+0 CKSEL0		1	CKSEL0 = 1 for crystal oscillator
