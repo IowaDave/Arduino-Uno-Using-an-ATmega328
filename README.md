@@ -1,7 +1,7 @@
 # Arduino Uno Using an ATmega328
 A technique for replacing the ATmega328P controller on an Arduino Uno with the older, almost identical ATmega328 model.
 
-My main purpose here is to record this information in the cloud where I can find it later. If a reader can find anything useful in it, even better!
+My main purpose here is to record this information in the cloud where I can find it later. If a reader were to find anything useful in it, even better! But seriously: who in their right mind would have any good reason to do what I am about to describe here?
 
 #### Problem
 You want to operate an Arduino Uno (Rev 3 or earlier) using an ATmega328 in place of the ATmega328P variant of the microcontroller for which it was designed. Also, you want to upload programs to it from the Arduino IDE.
