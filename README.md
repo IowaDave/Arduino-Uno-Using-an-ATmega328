@@ -10,7 +10,7 @@ I can think of three scenarios where this need could arise.
 
 1. The ATmega328P on one of your Arduinos stops working and you have only 328s on hand for replacements.
 
-2. You want to upload programs onto 328s mounted on an Arduino in the same way that you would for a '328P.
+2. You want to mount 328s onto an Arduino for convenient uploading of programs, in the same way that you would for a '328P.
 
 3. You're just curious. Or maybe you know somebody who bought a Big Box 'O '328s by mistake and wants to find a use for them. (Now, who would do a thing like *that*? he wondered, as he turned his mirrors toward the wall.)
 
@@ -90,22 +90,31 @@ avrdude done.  Thank you.
 
 Don't you cherish that cheery "Thank you" from the avrdude utility? 
 
-If you see something like that, then you are in business. The *boards.txt* file in the Arduino Core specifies different values for the fuses on a '328, both P and not-P, so we shall change those fuse bytes. Caution, you can "brick" an AVR by getting a fuse byte wrong. Go slowly and pay attention.
+If you see something like that, then you are in business. 
 
-Also, we are going to upload the bootloader that makes enables a chip mounted on the Arduino to accept code uploads.
+By the way, the fuse values shown above are the defaults as the device ships from the factory. 
 
-Update the "extended" fuse byte first. We just add one more option at the end of the common command line given above, &#8209;U, meaning to Upload. 
+The *boards.txt* file in the Arduino Core specifies certain, different values for the fuses on a '328 or '328P running on an Arduino Uno. We shall need to write those values into the fuse memory. Caution, you can "brick" an AVR by getting a fuse byte wrong. Go slowly and pay attention.
 
-The four-field string, efuse:w:0xfd:m, specifies the extended fuse memory space, the "w" write command, the value to write (0xfd for this fuse), and the "m" signifier telling avrdude to write the literal value.
+Also, we are going to upload the bootloader that enables a microcontroller mounted on the Arduino to accept code uploads.
 
-Writing it with a value of 0xfd will cause the Brown-out detector to be running all the time in your ATmega328:
+Write the "extended" fuse byte first. We just add the &#8209;U option, meaning to Upload, onto the end of the common command line given above, . 
+
+The string following the &#8209;U option in each of the following script contains four distinct fields separated by colons. These fields determine what changes avrdude will make inside the device, so proceed with care. The string for the extended fuse memory is "efuse:w:0xfd:m",
+
+* *efuse* directs the action to the extended fuse memory space, 
+* *w* tells avrdude to write what comes next into the specified memory, 
+* *0xfd* is the value to be written, and 
+* the *m* signifier tells avrdude to write the literal, 8-bit (one byte) value as given, 0xfd.
+
+Writing the value 0xfd here will cause the Brown-Out Detector to reset the ATmega328 if the supply voltage falls much below 2.9 volts.
 
 <blockquote>
 /Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/bin/avrdude &#8209;C/Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/etc/avrdude.conf &#8209;v &#8209;pm328 &#8209;cstk500v1 &#8209;P/dev/cu.usbmodem14101 &#8209;b19200 &#8209;U efuse:w:0xfd:m
 </blockquote>
 
 
-If you do *not* want the Brown-Out Detector to run on your ATmega328, then write the extended fuse to 0xff instead. [Footnote #2](#footnote-2)
+If you do *not* want the Brown-Out Detector to trigger any resets on your ATmega328, then write the extended fuse to 0xff instead. [Footnote #2](#footnote-2)
 
 Next, write the "high" fuse byte.
 
@@ -120,9 +129,9 @@ Now, at this point I would skip over writing the low fuse byte for the moment. I
 /Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/bin/avrdude &#8209;C/Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/etc/avrdude.conf &#8209;v &#8209;pm328 &#8209;cstk500v1 &#8209;P/dev/cu.usbmodem14101 &#8209;b19200 &#8209;U flash:w:/Applications/Arduino.app/Contents/Java/hardware/arduino/avr/bootloaders/optiboot/optiboot_atmega328.hex:i
 </blockquote>
 
-The -U option string for the bootloader gives the file location where the compiled firmware resides on my Mac. You will have to find the path to it on your machine and replace mine with yours. Note that the signifier in this command is "i", to indicate the firmware file is in the "Intel Hex" format.
+The -U option string for the bootloader gives the filesystem path to where the compiled firmware resides on my Mac. You will have to find the actual path on your machine and replace mine with yours. Note that the signifier in this command is "i", to indicate the firmware file is in the "Intel Hex" format.
 
-Finally, write the low fuse byte. This one changes the clock source for the chip to require a 16&nbsp;MHz external crystal. After you write this and perform a power-on reset of the chip, it will need to be connected to such a crystal in order to communicate with avrdude. As Figure 1 shows, I included a 16&nbsp;MHz crystal in my homebuilt programmer also.
+Finally, write the low fuse byte. This one changes the clock source for the chip to require a 16&nbsp;MHz external crystal. After you write this new value into the fuse and perform a power-on reset of the chip, it will need to be connected to such a crystal in order to communicate with avrdude. As Figure 1 shows, I included a 16&nbsp;MHz crystal in my homebuilt programmer also.
 
 <blockquote>
 /Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/bin/avrdude &#8209;C/Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/etc/avrdude.conf &#8209;v &#8209;pm328 &#8209;cstk500v1 &#8209;P/dev/cu.usbmodem14101 &#8209;b19200 &#8209;U lfuse:w:0xff:m
@@ -137,11 +146,13 @@ Avrdude will report the signature bytes it finds inside the controller, like thi
 avrdude: Device signature = 0x1e9514 (probably m328)
 </blockquote>
 
-We cannot change those bytes. Yet, an ATmega328P returns a different signature. Arduino uses avrdude to upload code into the chip mounted on the board. Which means that avrdude will expect to see the '328P signature. Normally, avrdude will abort an upload if it finds a device signature different from what it expects. So why does it not complain about the signature bytes when you upload code into a properly configured '328 installed into the socket on an Arduino Uno?
+We cannot change those bytes. Meanwhile, an ATmega328P returns a different signature. Arduino IDE uses avrdude to upload code into the chip mounted on the board. It tells avrdude to expect to see the '328P signature. Normally, avrdude will abort an upload if it finds a device signature different from what it expects. So why does it not complain about the signature bytes when you upload code into a properly configured '328 installed into the socket on an Arduino Uno?
 
-Tom Almy, the electrical engineer and author of the excellent series of "Far Inside Arduino" books found the answer in the source code for the bootloader. Avrdude does not inspect the physical chip mounted on the Arduino board. Instead, it asks the bootloader, which always returns the signature bytes for a '328P. Again, see [Footnote #2](#footnote-2).
+Tom Almy, the electrical engineer and author of the excellent series of "Far Inside Arduino" books, found the answer in the source code for the bootloader. Avrdude does not inspect the physical chip mounted on the Arduino board. Instead, it asks the bootloader, *which always returns the signature bytes for a '328P*. 
 
-And here it is! 
+It's a trick by those bootloader-code-writin' rascals to get an Uno to work with a non-Pico '328. As the two variants are so nearly alike, this workaround appears largely useful and fairly benign. I am glad to partake of it. Just keep in mind the difference involving the Brown-Out Detector. [Footnote #2](#footnote-2).
+
+It means you can write just about any Arduino Uno code and then upload it to the '328 mounted on the board by simply clicking the "Upload" arrow icon, or from the menu bar with Sketch > upload. And here is the Blink example program, uploaded that way and blinking away! 
 
 ![ATmega328 on an Uno](./images/ATmega328_in_Uno.png)
 <br>**An ATmega328, not-P, running the Blink demo program in an Arduino Uno clone board**
