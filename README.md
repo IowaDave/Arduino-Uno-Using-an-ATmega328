@@ -3,7 +3,7 @@ A technique for replacing the ATmega328P controller on an Arduino Uno with the o
 
 My main purpose here is to record this information in the cloud where I can find it later. If a reader were to find anything useful in it, even better! But seriously: who in their right mind would have any good reason to do what I am about to describe here?
 
-#### Problem
+### Problem
 You want to operate an Arduino Uno (Rev 3 or earlier) using an ATmega328 in place of the ATmega328P variant of the microcontroller for which it was designed. Also, you want to upload programs to it from the Arduino IDE.
 
 I can think of three scenarios where this need could arise.
@@ -14,7 +14,7 @@ I can think of three scenarios where this need could arise.
 
 3. You're just curious. Or maybe you know somebody who bought a Big Box 'O '328s by mistake and wants to find a use for them. (Now, who would do a thing like *that*? he wondered, as he turned his mirrors toward the wall.)
 
-#### Solution
+### Solution
 Configure the '328 in such a way that it will appear to be a '328P for the purpose of uploading code. Do this first, before mounting the '328 into the Arduino.
 
 The steps include:
@@ -25,7 +25,7 @@ The steps include:
 
 A '328 thus prepared and inserted into the socket of an Uno will be seen by the Arduino IDE as a '328P. No practical difference between the two variants affects writing code. Each of the two variants can execute the same code equally well as the other. [Footnote #1](#footnote-1).
 
-#### Equipment
+### Equipment
 This article demonstrates using the *avrdude* utility and a dedicated ISP programmer.
 
 A second Arduino can be used as the ISP programmer. Many tutorials can be found online showing how to prepare and to deploy such a thing. I more or less followed the one provided by Arduino.cc: [https://docs.arduino.cc/built-in-examples/arduino-isp/ArduinoISP/](https://docs.arduino.cc/built-in-examples/arduino-isp/ArduinoISP/).
@@ -39,7 +39,7 @@ Avrdude and its necessary resource file, avrdude.conf, come installed with the A
 
 Locate avrdude and avrdude.conf on the local computer. Make note of the full path that leads to each of those two files.
 
-#### Procedure
+### Procedure
 I connect the programmer directly to the SPI and reset pins of an unmounted '328 microcontroller. Those can be located by referring to the official datasheet. 
 
 Attach the Arduino-as-ISP programmer to a USB port on the local computer. Make note of the "port" associated with the device. On a Windows machine, look in the Device Manager. On Linux or a Mac, look in the /dev directory.
@@ -139,7 +139,7 @@ Finally, write the low fuse byte. This one changes the clock source for the chip
 
 If all goes well you will see messages indicating success at each step. Now you can install the ATmega328 onto the Arduino Uno.
 
-#### The Signature Bytes
+### The Signature Bytes
 Avrdude will report the signature bytes it finds inside the controller, like this:
 
 <blockquote>
