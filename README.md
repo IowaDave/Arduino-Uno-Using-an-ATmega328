@@ -82,12 +82,12 @@ avrdude: Device signature = 0x1e9514 (probably m328)
 avrdude: safemode: lfuse reads as 62
 avrdude: safemode: hfuse reads as DE
 avrdude: safemode: efuse reads as FF
-
+<br>
 avrdude: safemode: lfuse reads as 62
 avrdude: safemode: hfuse reads as DE
 avrdude: safemode: efuse reads as FF
 avrdude: safemode: Fuses OK (E:FF, H:DE, L:62)
-
+<br>
 avrdude done.  Thank you.
 </pre></blockquote>
 
