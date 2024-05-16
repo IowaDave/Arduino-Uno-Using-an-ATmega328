@@ -75,10 +75,9 @@ A successful result shows up in the command window looking something like this:
 avrdude: Version 6.3-20190619
          Copyright (c) 2000-2005 Brian Dean, http://www.bdmicro.com/
          Copyright (c) 2007-2014 Joerg Wunsch
-
-
-... and more lovely information, ending with ...
-
+<br>
+... followed by further lovely information, ending with ...
+<br>
 avrdude: Device signature = 0x1e9514 (probably m328)
 avrdude: safemode: lfuse reads as 62
 avrdude: safemode: hfuse reads as DE
@@ -96,9 +95,9 @@ Don't you adore that cheery "Thank you" from the avrdude utility?
 
 I hope you see something like that. It means you are in business.
  
-By the way, the fuse values shown above are the defaults as the device ships from the factory. 
+By the way, the fuse values shown above are the defaults as the device ships from the factory. Notice that the "efuse" comes from the factory with its value set to "FF". That needs to change and we are going to change it.
 
-The *boards.txt* file in the Arduino Core specifies certain, different values for the fuses on a '328 or '328P running on an Arduino Uno. We shall need to write those values into the fuse memory. Caution, you can "brick" an AVR by getting a fuse byte wrong. Go slowly and pay attention.
+The *boards.txt* file in the Arduino Core specifies certain, different values for the fuses on a '328 or '328P running on an Arduino Uno. We shall write those values into the fuse memory. Caution, you can "brick" an AVR by getting a fuse byte wrong. Go slowly and pay attention.
 
 Also, we are going to upload the bootloader that enables a microcontroller mounted on the Arduino to accept code uploads.
 
@@ -111,14 +110,13 @@ The parameter string following the &#8209;U option in each of the following scri
 * **0xfd** is the value to be written, and 
 * the **m** signifier tells avrdude to write the literal, 8-bit (one byte) value as given, 0xfd.
 
-Writing the value 0xfd here will configure the Brown-Out Detector to reset the ATmega328 whenever the supply voltage falls much below 2.9 volts.
+Writing the value 0xfd here configures the Brown-Out Detector to reset the ATmega328 whenever the supply voltage falls much below 2.9 volts.
 
 <blockquote>
 /Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/bin/avrdude &#8209;C/Users/myname/Library/Arduino15/packages/arduino/tools/avrdude/6.3.0-arduino17/etc/avrdude.conf &#8209;v &#8209;pm328 &#8209;cstk500v1 &#8209;P/dev/cu.usbmodem14101 &#8209;b19200 &#8209;U efuse:w:0xfd:m
 </blockquote>
 
-
-If you do *not* want the Brown-Out Detector to trigger any resets on your ATmega328, then disable it by writing the extended fuse to 0xff instead. [Footnote #2](#footnote-2)
+If for some reason you do *not* want the Brown-Out Detector (BOD) to trigger any resets on your ATmega328, then disable it by writing the extended fuse to 0xff instead. However, don't do that. On an Arduino running at 16 MHz, you probably do want to keep the BOD working for you as a safeguard against problems due to insufficient voltage. [Footnote #2](#footnote-2)
 
 Next, write the "high" fuse byte.
 
@@ -156,7 +154,7 @@ Tom Almy, the electrical engineer and author of the excellent series of "Far Ins
 
 It's a trick by those bootloader-code-writin' rascals to get an Uno to work with a non-Pico '328. As the two variants are so nearly alike, this workaround appears largely useful and fairly benign. I am glad to partake of it. Just keep in mind the difference involving the Brown-Out Detector. [Footnote #2](#footnote-2).
 
-It means you can write just about any Arduino Uno code and then upload it to the '328 mounted on the board by simply clicking the "Upload" arrow icon, or from the menu bar with Sketch > upload. And here is the Blink example program, uploaded that way and blinking away! 
+It means you can write just about any Arduino Uno code and then upload it to the '328 mounted on the board by simply clicking the "Upload" arrow icon, or from the menu bar with Sketch > upload. And here is the Blink example program, uploaded as usual and blinking away! 
 
 ![ATmega328 on an Uno](./images/ATmega328_in_Uno.png)
 <br>**An ATmega328, not-P, running the Blink demo program in an Arduino Uno clone board**
@@ -167,13 +165,31 @@ It means you can write just about any Arduino Uno code and then upload it to the
 
 The "P" in 328P denotes a PicoPower version of the microcontroller. It consumes less current compared to the '328 without the "P".  The difference is not really noticeable on an Uno operating on 5 volts at a clock speed of 16 MHz.
 
-Detail-minded readers of the official datasheet for the devices can still find it mentioned that the '328, without the "P", lacks the ```jmp``` and ```call``` assembly language instructions. That is obsolete information.
+Detail-minded readers of the official datasheet for the devices can still find it mentioned that the non-Pico '328 lacks the ```jmp``` and ```call``` assembly language instructions. However, that is obsolete information.
 
 Since revision of the silicon to the modern AVRe+ core, 328 chips do in fact support those instructions, according to the megaAVR device table in the [AVR Instruction Set Manual - 2021 edition](https://ww1.microchip.com/downloads/en/DeviceDoc/AVR-InstructionSet-Manual-DS40002198.pdf) as that link was accessed in May 2024.
 
 <h4 id="footnote-2">Footnote #2</h4>
 
-ATmega328P chips enable software to turn the Brown-Out Detector (BOD) on and off during runtime. The plain '328s do not. That is why the decision whether to operate the BOD in a '328 needs to be implemented in the extended fuse byte. 
+ATmega328P chips enable software to turn the Brown-Out Detector (BOD) on and off during runtime. The plain '328s do not. That is why the decision whether to operate the BOD in a '328 needs to be implemented in the extended fuse byte.
 
-Readers take note: I have not investigated what might happen by telling a '328 to turn off its BOD. The need to manage the BOD dynamically has just never come up for me. If you need that capability, a '328 would be the wrong part; use a '328P instead.
+It might be a best practice with both variants to turn the BOD on and leave it on. 
 
+There are good reasons to keep the BOD running. One of them involves the CPU. If I interpret the "Speed Grades" table in the datasheet correctly, both 'the 328s and the '328Ps need a voltage above 3.7 volts for "safe" CPU operation at the 16 MHz speed of the crystal oscillator driving the Arduino Uno. Suspending operation at voltages much below that level sounds protective.
+
+Another reason involves memory. I'm told by sources I believe that low or erratic voltage can degrade what's stored in both RAM and flash (program) memory. 
+
+Writing to EEPROM also needs good voltage and reliable CPU cycling. The datasheet discusses this in a section named *Preventing EEPROM Corruption*.
+
+<blockquote>
+EEPROM data corruption can easily be avoided by following this design recommendation:
+Keep the AVR RESET active (low) during periods of insufficient power supply voltage. This can be done by enabling the internal Brown-out Detector (BOD). ... If a reset occurs while a write operation is in progress, the write operation will be completed provided that the power supply voltage is sufficient.
+</blockquote>
+
+Tom Almy, the electrical engineer and author mentioned above, related an incident from his professional experience. 
+
+<blockquote>
+Having (BOD) disabled caused a problem with a product at work years ago. It was supposed to be enabled but for some reason the engineer at the time had it disabled. The problem was with writing to the EEPROM. Product settings were stored in the EEPROM. If the power was turned off while the writing was occurring the EEPROM would be corrupted. ... Sounds like an unlikely occurrence, but it only needs to happen once! 
+</blockquote>
+
+BOD consumes 20 *micro*Amps of current in an AVR '328. It could run for years at that rate on three AA batteries. It seems like a small price to pay for good insurance. Protect your project. Enable the BOD.
