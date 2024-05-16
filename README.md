@@ -101,7 +101,7 @@ The *boards.txt* file in the Arduino Core specifies certain, different values fo
 
 Also, we are going to upload the bootloader that enables a microcontroller mounted on the Arduino to accept code uploads.
 
-Write the "extended" fuse byte first. We just add the &#8209;U option, meaning to Upload, onto the end of the common command line given above, . 
+Write the "extended" fuse byte first. We just add the &#8209;U option followed by a string of parameters describing the memory operation we want avrdude to perform. 
 
 The parameter string following the &#8209;U option in each of the following scripts contains four distinct fields separated by colons. These fields determine what changes avrdude will make inside the device, so proceed with care. The string for the extended fuse memory is "efuse:w:0xfd:m",
 
